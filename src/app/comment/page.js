@@ -1,10 +1,21 @@
-"use client";
+"use client"; // Must be first
 
-import React, { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react"; // ✅ Added
 import { useSearchParams } from "next/navigation";
-import axios from "axios";
+import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 
-// This component ensures that `useSearchParams` is only used on the client side
+const fetchBlogById = async (id) => {
+  try {
+    const res = await fetch(`/api/article_detail?id=${id}`);
+    const data = await res.json();
+    return data.article;
+  } catch (error) {
+    console.error("Error fetching article by ID:", error);
+    return null;
+  }
+};
+
 const BlogPageContent = () => {
   const searchParams = useSearchParams();
   const blogId = searchParams.get("id");
@@ -20,157 +31,166 @@ const BlogPageContent = () => {
   useEffect(() => {
     if (!blogId) return;
 
-    const fetchBlog = async () => {
-      try {
-        const response = await axios.get(`/api/blog?id=${blogId}`);
-        setBlog(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching blog:", err);
-        setLoading(false);
-      }
+    const load = async () => {
+      setLoading(true);
+      const blogData = await fetchBlogById(blogId);
+      setBlog(blogData);
+
+      const userId = localStorage.getItem("userEmail");
+      if (userId) await fetchReactions(blogId);
+
+      setLoading(false);
     };
 
-    const fetchLikesDislikes = async () => {
-      try {
-        const response = await axios.get(`/api/like?id=${blogId}`);
-        setLikes(response.data.likes || 0);
-        setDislikes(response.data.dislikes || 0);
-      } catch (err) {
-        console.error("Error fetching likes/dislikes:", err);
-      }
-    };
-
-    const fetchComments = async () => {
-      try {
-        const response = await axios.get(`/api/comment?id=${blogId}`);
-        setComments(response.data || []);
-      } catch (err) {
-        console.error("Error fetching comments:", err);
-      }
-    };
-
-    fetchBlog();
-    fetchLikesDislikes();
-    fetchComments();
+    load();
   }, [blogId]);
 
-  const handleLike = async () => {
+  const fetchReactions = async (id) => {
+    const userId = localStorage.getItem("userEmail");
+    if (!userId) return;
+
     try {
-      await axios.post("/api/like", {
-        blogId,
-        action: "like",
-      });
-      setUserAction("like");
-      setLikes((prev) => prev + 1);
-    } catch (err) {
-      console.error("Error liking:", err);
+      const res1 = await fetch(`/api/comment?product_id=${id}`);
+      const commentData = await res1.json();
+      if (res1.ok) setComments(commentData.comments || []);
+
+      const res2 = await fetch(`/api/like?productId=${id}&userId=${userId}`);
+      const likeData = await res2.json();
+      if (res2.ok) {
+        setLikes(likeData.data?.likes || 0);
+        setDislikes(likeData.data?.dislikes || 0);
+        setUserAction(likeData.data?.userAction || null);
+      }
+    } catch (error) {
+      console.error("Error fetching reactions:", error);
     }
   };
 
-  const handleDislike = async () => {
+  const handleReact = async (reaction) => {
+    const userId = localStorage.getItem("userEmail");
+    if (!userId) return alert("Login required");
+
     try {
-      await axios.post("/api/like", {
-        blogId,
-        action: "dislike",
+      const res = await fetch("/api/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: blogId, reaction, userid: userId }),
       });
-      setUserAction("dislike");
-      setDislikes((prev) => prev + 1);
-    } catch (err) {
-      console.error("Error disliking:", err);
+
+      const data = await res.json();
+      if (res.ok) {
+        setUserAction(reaction === "like" ? "like" : null);
+        await fetchReactions(blogId);
+      } else {
+        alert(data.message || "Failed to react.");
+      }
+    } catch (error) {
+      console.error("Reaction error:", error);
     }
   };
 
-  const handleComment = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || !comment.trim()) return;
+  const handleSend = useCallback(async () => {
+    const trimmed = comment.trim();
+    if (!trimmed) return;
 
+    const name = localStorage.getItem("userName");
+    const email = localStorage.getItem("userEmail");
+    if (!name || !email) return alert("Login required");
+
+    setLoading(true);
     try {
-      await axios.post("/api/comment", {
-        blogId,
-        name: user.name,
-        email: user.email,
-        comment,
+      const res = await fetch("/api/comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: blogId, text: trimmed, name, email }),
       });
 
-      setComments((prev) => [
-        ...prev,
-        {
-          name: user.name,
-          email: user.email,
-          comment,
-        },
-      ]);
-      setComment("");
-    } catch (err) {
-      console.error("Error posting comment:", err);
+      const data = await res.json();
+      if (res.ok) {
+        setComments((prev) => [data.comment, ...prev]);
+        setComment("");
+      } else {
+        alert(data.message || "Failed to post comment.");
+      }
+    } catch (error) {
+      console.error("Error posting comment:", error);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [comment, blogId]);
 
-  if (loading) return <div>Loading...</div>;
-
-  if (!blog) return <div>Blog not found</div>;
+  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (!blog) return <p className="text-center mt-10 text-red-500">Blog not found.</p>;
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">{blog.title}</h1>
-      <p className="text-gray-700 mb-4">{blog.content}</p>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">{blog.title}</h1>
+      <Image
+        src={blog.image}
+        alt={blog.title}
+        width={800}
+        height={400}
+        className="w-full rounded-lg mb-4"
+        onError={(e) => (e.target.src = "https://via.placeholder.com/800x400")}
+      />
+      <p className="text-gray-700 mb-6">{blog.description}</p>
 
+      {/* Like/Dislike */}
       <div className="flex items-center gap-4 mb-6">
         <button
-          onClick={handleLike}
+          onClick={() => handleReact("like")}
           disabled={userAction === "like"}
-          className={`px-4 py-2 rounded ${
-            userAction === "like" ? "bg-green-500 text-white" : "bg-gray-200"
+          className={`px-4 py-2 rounded text-white ${
+            userAction === "like" ? "bg-green-800" : "bg-green-600 hover:bg-green-700"
           }`}
         >
           👍 {likes}
         </button>
 
         <button
-          onClick={handleDislike}
-          disabled={userAction === "dislike"}
-          className={`px-4 py-2 rounded ${
-            userAction === "dislike" ? "bg-red-500 text-white" : "bg-gray-200"
+          onClick={() => handleReact("dislike")}
+          disabled={!userAction}
+          className={`px-4 py-2 rounded text-white ${
+            userAction ? "bg-red-600 hover:bg-red-700" : "bg-red-400 cursor-not-allowed"
           }`}
         >
           👎 {dislikes}
         </button>
       </div>
 
+      {/* Comment box */}
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Add a Comment</h2>
         <textarea
-          className="w-full p-2 border rounded mb-2"
-          rows="4"
-          placeholder="Write your comment..."
           value={comment}
           onChange={(e) => setComment(e.target.value)}
+          placeholder="Write your comment..."
+          className="w-full p-3 border rounded-lg mb-2"
         />
         <button
-          onClick={handleComment}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
+          onClick={handleSend}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          disabled={loading}
         >
-          Submit Comment
+          {loading ? "Sending..." : "Post Comment"}
         </button>
       </div>
 
+      {/* Comment List */}
       <div>
-        <h2 className="text-xl font-semibold mb-2">Comments</h2>
+        <h2 className="text-xl font-semibold mb-4">Comments</h2>
         {comments.length === 0 ? (
           <p className="text-gray-500">No comments yet.</p>
         ) : (
           <ul className="space-y-4">
-            {comments.map((c, index) => (
-              <li key={index} className="border p-3 rounded">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="bg-gray-400 text-white w-6 h-6 flex items-center justify-center rounded-full text-sm">
-                    {c.name[0].toUpperCase()}
-                  </div>
-                  <span className="font-medium">{c.name}</span>
-                  <span className="text-sm text-gray-500">({c.email})</span>
+            {comments.map((c) => (
+              <li key={c._id} className="bg-gray-100 p-4 rounded flex items-start gap-4">
+                <div className="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-semibold">
+                  {c.name?.[0]?.toUpperCase() || "U"}
                 </div>
-                <p>{c.comment}</p>
+                <div>
+                  <p className="font-bold">{c.name}</p>
+                  <p className="text-gray-800">{c.text}</p>
+                </div>
               </li>
             ))}
           </ul>
