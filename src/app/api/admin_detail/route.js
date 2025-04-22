@@ -1,7 +1,9 @@
 import { connectDB } from "@/app/lib/db";
 import Article from "@/app/models/article";
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
+// GET: Fetch articles by userEmail with pagination
 export async function GET(req) {
   try {
     await connectDB();
@@ -44,18 +46,21 @@ export async function GET(req) {
     );
   }
 }
-// Edit
 
-export async function PUT(req, { params }) {
+// PUT: Update an article by ID
+export async function PUT(req) {
   try {
     await connectDB();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");// Extracting article ID from the URL path
 
-    const { id } = params; // Get article ID from URL
-    const { title, content } = await req.json(); // Extract the new data from the request body
+    // Get the new data from the request body
+    const { title, description } = await req.json();
 
-    if (!title || !content) {
+    // Validate that title, description, and image are provided
+    if (!title || !description ) {
       return NextResponse.json(
-        { message: "Title and content are required." },
+        { message: "Title, description, and image are required." },
         { status: 400 }
       );
     }
@@ -63,7 +68,7 @@ export async function PUT(req, { params }) {
     // Find and update the article by ID
     const updatedArticle = await Article.findByIdAndUpdate(
       id,
-      { title, content },
+      { title, description}, // Update the article data
       { new: true } // Return the updated document
     );
 
@@ -86,12 +91,15 @@ export async function PUT(req, { params }) {
     );
   }
 }
-// delete
-export async function DELETE(req, { params }) {
+
+// DELETE: Delete an article by ID
+export async function DELETE(req) {
   try {
     await connectDB();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
 
-    const { id } = params; // Get article ID from URL
+    // Extracting article ID from the URL path
 
     // Find and delete the article by ID
     const deletedArticle = await Article.findByIdAndDelete(id);

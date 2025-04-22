@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* Conditionally render the Navbar based on the route */}
         {/* {router.pathname !== '/dashboard' && } */}
-      <Navbar/>
+        <Navbar/>
         {children}
         <Footer/>
      

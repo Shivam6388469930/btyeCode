@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = "mongodb://localhost:27017/nextAuth";
+const MONGODB_URI = "mongodb+srv://agraharishivam6388:V1LPNYYPfyOpp5MH@blogs.uohgexh.mongodb.net/blogs?retryWrites=true&w=majority&appName=blogs";
 if (!MONGODB_URI) throw new Error("MONGODB_URI not defined in .env.local");
 
 let cached = global._mongoose || { conn: null, promise: null };
