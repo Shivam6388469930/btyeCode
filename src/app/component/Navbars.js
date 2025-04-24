@@ -101,12 +101,12 @@ export default function Navbar() {
               </div>
 
               <div className="absolute inset-y-0 right-3 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                <button
-                  onClick={toggleTheme}
-                  className="rounded-full p-2 mr-5 text-gray-400 hover:text-white"
-                >
-                  {theme === "light" ? <MoonIcon className="size-6" /> : <SunIcon className="size-6" />}
-                </button>
+                // <button
+                //   onClick={toggleTheme}
+                //   className="rounded-full p-2 mr-5 text-gray-400 hover:text-white"
+                // >
+                //   {theme === "light" ? <MoonIcon className="size-6" /> : <SunIcon className="size-6" />}
+                // </button>
 
                 <Menu as="div" className="relative ml-3">
                   <MenuButton className="flex rounded-full text-sm focus:ring-2 focus:ring-white">
