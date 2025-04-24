@@ -1,7 +1,33 @@
 "use client";
-import React from "react";
+import React, { useState } from "react"; // Added useState import
 
-export default function page() {
+export default function Page() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState(""); // Added status for feedback
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("Sending...");
+    
+    const formData = { email };
+
+    const response = await fetch("/api/suscribe", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      setStatus("✅ Thank you for subscribing!");
+      setEmail(""); // Reset email input after successful submission
+    } else {
+      setStatus("❌ Failed to send email. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-800">
       {/* Hero Section */}
@@ -59,11 +85,16 @@ export default function page() {
           type="email"
           placeholder="Enter your email"
           className="p-3 rounded w-full max-w-sm mb-4 text-gray-800"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
         <br />
-        <button className="bg-white text-purple-700 font-semibold px-6 py-3 rounded hover:bg-gray-200 transition-all">
+        <button className="bg-white text-purple-700 font-semibold px-6 py-3 rounded hover:bg-gray-200 transition-all" onClick={handleSubmit}>
           Subscribe Now
         </button>
+
+        {/* Status Feedback */}
+        {status && <p className="mt-4 text-lg">{status}</p>}
       </section>
     </div>
   );

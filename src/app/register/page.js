@@ -52,7 +52,7 @@ export default function RegisterPage() {
         setPassword("");
         setImage(null);
         setPreview(null);
-        localStorage.setItem("Image", data.image); // image URL from server
+        localStorage.setItem("Image", data.image);
         window.location.href = "/login";
       }
     } catch (err) {
@@ -63,37 +63,38 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex justify-center items-center h-[80vh]">
-      <div className="max-w-md mx-auto mt-10 min-h-[50vh] w-1/3 bg-white border border-gray-300 shadow-2xl rounded-xl p-4 gap-8">
-        <h2 className="text-2xl font-bold mb-4 text-center">Register</h2>
-        <form onSubmit={handleRegister} className="flex flex-col gap-3">
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 px-4">
+      <div className="w-full sm:w-4/5 md:w-3/5 lg:w-1/3 bg-white border border-gray-300 shadow-2xl rounded-xl p-6">
+        <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+        <form onSubmit={handleRegister} className="flex flex-col gap-4">
           <input
             type="text"
             placeholder="Username"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            className="p-2 border rounded"
+            className="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="p-2 border rounded"
+            className="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="p-2 border rounded"
+            className="p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           <input
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="p-2 border rounded"
+            className="p-2 border rounded-md"
           />
+
           {preview && (
             <div className="w-full h-40">
               <Image
@@ -105,15 +106,18 @@ export default function RegisterPage() {
               />
             </div>
           )}
+
           <button
             type="submit"
-            className="p-2 my-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
             disabled={loading}
           >
             {loading ? "Registering..." : "Register"}
           </button>
         </form>
-        {message && <p className="mt-3 text-center text-red-500">{message}</p>}
+        {message && (
+          <p className="mt-4 text-center text-red-600 font-medium">{message}</p>
+        )}
       </div>
     </div>
   );

@@ -217,7 +217,8 @@ const Page = () => {
           </motion.h1>
           <p className="mt-2 text-lg md:text-xl">Discover amazing features and offers!</p>
           <button className="mt-4 px-6 py-2 bg-white text-blue-600 font-semibold rounded-full hover:bg-gray-200 transition">
-            Get Started
+            <a href="/articles"> Get Started</a>
+           
           </button>
         </div>
       </div>
