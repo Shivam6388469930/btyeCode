@@ -100,10 +100,11 @@ export default function Navbar() {
                 </div>
               </div>
 
-              <div className="absolute inset-y-0 right-3 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 " style={{display: "none"}}>
+              <div className="absolute inset-y-0 right-3 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 ">
              <button
                   onClick={toggleTheme}
                   className="rounded-full p-2 mr-5 text-gray-400 hover:text-white"
+                  style={{display:"none"}}
                 >
                   {theme === "light" ? <MoonIcon className="size-6" /> : <SunIcon className="size-6" />}
                 </button>
