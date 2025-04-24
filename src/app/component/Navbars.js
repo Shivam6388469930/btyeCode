@@ -13,6 +13,8 @@ import {
 import {
   Bars3Icon,
   XMarkIcon,
+  MoonIcon,
+  SunIcon,
 } from "@heroicons/react/24/outline";
 
 const navigation = [
@@ -29,16 +31,27 @@ function classNames(...classes) {
 export default function Navbar() {
   const [userImage, setUserImage] = useState("/avter.png");
   const [userName, setUserName] = useState("");
+  const [theme, setTheme] = useState("light");
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     const img = localStorage.getItem("Image");
     const name = localStorage.getItem("userName");
+    const storedTheme = localStorage.getItem("theme") || "light";
 
     setUserImage(img && (img.startsWith("http") || img.startsWith("/")) ? img : "/avter.png");
     setUserName(name || "");
+    setTheme(storedTheme);
     setHasMounted(true);
+    document.documentElement.classList.toggle("dark", storedTheme === "dark");
   }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  };
 
   const handleSignOut = () => {
     if (!localStorage.getItem("token")) {
@@ -49,10 +62,10 @@ export default function Navbar() {
     }
   };
 
-  if (!hasMounted) return null;
+  if (!hasMounted) return null; // Prevent hydration mismatch
 
   return (
-    <Disclosure as="nav" className="bg-gray-800 sticky top-0 z-10 shadow-lg">
+    <Disclosure as="nav" className="bg-gray-800 dark:bg-gray-900 sticky top-0 z-10 shadow-lg">
       {({ open }) => (
         <>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -87,7 +100,14 @@ export default function Navbar() {
                 </div>
               </div>
 
-              <div className="absolute inset-y-0 right-3 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+              <div className="absolute inset-y-0 right-3 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 " style={{display: "none"}}>
+             <button
+                  onClick={toggleTheme}
+                  className="rounded-full p-2 mr-5 text-gray-400 hover:text-white"
+                >
+                  {theme === "light" ? <MoonIcon className="size-6" /> : <SunIcon className="size-6" />}
+                </button>
+
                 <Menu as="div" className="relative ml-3">
                   <MenuButton className="flex rounded-full text-sm focus:ring-2 focus:ring-white">
                     <Image
@@ -99,7 +119,7 @@ export default function Navbar() {
                     />
                   </MenuButton>
 
-                  <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
+                  <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black/5">
                     {!userName ? (
                       <>
                         <MenuItem>
@@ -107,8 +127,8 @@ export default function Navbar() {
                             <a
                               href="/register"
                               className={classNames(
-                                active && "bg-gray-100",
-                                "block px-4 py-2 text-sm text-gray-700"
+                                active && "bg-gray-100 dark:bg-gray-700",
+                                "block px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
                               )}
                             >
                               Sign Up
@@ -120,8 +140,8 @@ export default function Navbar() {
                             <a
                               href="/login"
                               className={classNames(
-                                active && "bg-gray-100",
-                                "block px-4 py-2 text-sm text-gray-700"
+                                active && "bg-gray-100 dark:bg-gray-700",
+                                "block px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
                               )}
                             >
                               Sign In
@@ -136,8 +156,8 @@ export default function Navbar() {
                             <a
                               href="/profile"
                               className={classNames(
-                                active && "bg-gray-100",
-                                "block px-4 py-2 text-sm text-gray-700"
+                                active && "bg-gray-100 dark:bg-gray-700",
+                                "block px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
                               )}
                             >
                               Your Profile
@@ -149,8 +169,8 @@ export default function Navbar() {
                             <button
                               onClick={handleSignOut}
                               className={classNames(
-                                active && "bg-gray-100",
-                                "w-full text-left px-4 py-2 text-sm text-gray-700"
+                                active && "bg-gray-100 dark:bg-gray-700",
+                                "w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200"
                               )}
                             >
                               Sign Out
